@@ -1,0 +1,78 @@
+:root {
+  /* Qizlar Akademiyasi AppColors (light) */
+  --brand-primary: #e8357d;
+  --brand-primary-dark: #c42d68;
+  --brand-accent-soft: #ffe4ee;
+  --brand-ink: #0f172a;
+
+  --bg: #f7f7f5;
+  --bg-pattern: #f1f5f9;
+  --surface: #fff5f8;
+  --board: #e8d4dc;
+  --cell: #f3e6eb;
+  --text-dark: #64748b;
+  --text-light: #ffffff;
+  --text-muted: #94a3b8;
+  --shadow: rgb(15 23 42 / 12%);
+
+  --tile-2: #fff5f8;
+  --tile-4: #ffe4ee;
+  --tile-8: #f7a0c0;
+  --tile-16: #f278a8;
+  --tile-32: #e8357d;
+  --tile-64: #d12a6e;
+  --tile-128: #c2185b;
+  --tile-256: #ad1457;
+  --tile-512: #9c1260;
+  --tile-1024: #880e4f;
+  --tile-2048: #e8357d;
+  --tile-super: #0f172a;
+
+  --font: "Rubik", system-ui, sans-serif;
+  --radius: 6px;
+  --gap: 12px;
+  --board-size: min(92vw, 460px);
+  --transition: 120ms ease-in-out;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(232 53 125 / 12%), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgb(255 228 238 / 55%), transparent),
+    var(--bg);
+  color: var(--text-dark);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+#app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}

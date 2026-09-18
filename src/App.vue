@@ -43,11 +43,11 @@ const { muted, toggleMute } = useAudio()
 .app {
   width: min(100%, 520px);
   margin: 0 auto;
-  padding: 24px 16px 32px;
+  padding: 28px 16px 36px;
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 20px;
+  gap: 22px;
 }
 
 .shell {

@@ -73,12 +73,15 @@ defineEmits<{
 }
 
 .score-box {
-  min-width: 72px;
-  padding: 8px 12px;
+  min-width: 76px;
+  padding: 10px 14px;
   border-radius: var(--radius);
-  background: var(--brand-primary);
+  background: linear-gradient(145deg, var(--brand-primary-light), var(--brand-primary));
   text-align: center;
   color: var(--text-light);
+  box-shadow:
+    0 4px 14px var(--shadow-brand),
+    0 1px 0 rgb(255 255 255 / 25%) inset;
 }
 
 .label {
@@ -110,8 +113,11 @@ defineEmits<{
   font-size: clamp(40px, 12vw, 56px);
   font-weight: 800;
   line-height: 1;
-  color: var(--brand-ink);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--brand-ink) 30%, var(--brand-primary) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .actions {
@@ -128,28 +134,36 @@ defineEmits<{
   justify-content: center;
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--brand-ink);
+  color: var(--brand-primary);
   font-size: 20px;
   line-height: 1;
-  transition: background var(--transition);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition:
+    background var(--transition),
+    box-shadow var(--transition);
 }
 
 .mute:hover {
   background: var(--brand-accent-soft);
+  box-shadow: 0 4px 12px var(--shadow-brand);
 }
 
 .new-game {
-  padding: 12px 18px;
+  padding: 12px 20px;
   border-radius: var(--radius);
-  background: var(--brand-primary);
+  background: linear-gradient(145deg, var(--brand-primary-light), var(--brand-primary));
   color: var(--text-light);
   font-size: 15px;
   font-weight: 700;
-  transition: background var(--transition);
+  box-shadow: 0 4px 14px var(--shadow-brand);
+  transition:
+    box-shadow var(--transition),
+    filter var(--transition);
 }
 
 .new-game:hover {
-  background: var(--brand-primary-dark);
+  filter: brightness(1.05);
+  box-shadow: 0 6px 18px var(--shadow-brand);
 }
 
 @media (max-width: 420px) {

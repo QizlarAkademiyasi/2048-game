@@ -38,10 +38,11 @@ export function useGame() {
   }
 
   function tryMove(direction: Direction): void {
-    void unlock()
     const prev = state.value
     const next = move(prev, direction)
     if (!next) return
+
+    void unlock()
 
     const scoreGain = next.score - prev.score
     if (scoreGain > 0) {
@@ -50,14 +51,11 @@ export function useGame() {
       playMove()
     }
 
-    const becameWin = next.won && !prev.won
-    const becameLose = next.over && !prev.over
-
     state.value = next
     persist()
 
-    if (becameWin) playWin()
-    if (becameLose) playLose()
+    if (next.won && !prev.won) playWin()
+    if (next.over && !prev.over) playLose()
   }
 
   function onKeydown(event: KeyboardEvent): void {

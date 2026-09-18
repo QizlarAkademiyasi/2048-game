@@ -17,17 +17,21 @@ let unlocked = false
 let bgmRunning = false
 const bgmNodes: AudioNode[] = []
 let bgmOscillators: OscillatorNode[] = []
+let bgmTimer: number | null = null
+let bgmStep = 0
 
 function ensureContext(): AudioContext {
   if (!ctx) {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const AC =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     ctx = new AC()
     master = ctx.createGain()
-    master.gain.value = 1
+    master.gain.value = muted ? 0 : 1
     master.connect(ctx.destination)
 
     sfxBus = ctx.createGain()
-    sfxBus.gain.value = 0.55
+    sfxBus.gain.value = 0.85
     sfxBus.connect(master)
 
     bgmBus = ctx.createGain()
@@ -41,6 +45,22 @@ function now(): number {
   return ensureContext().currentTime
 }
 
+/** Resume AudioContext; safe to call from any user gesture. */
+export async function unlock(): Promise<void> {
+  const audio = ensureContext()
+  unlocked = true
+  if (audio.state === 'suspended') {
+    try {
+      await audio.resume()
+    } catch {
+      // ignore — browser may still block until next gesture
+    }
+  }
+  if (!muted && !bgmRunning) {
+    startBgm()
+  }
+}
+
 function playTone({
   freq,
   type = 'sine',
@@ -50,11 +70,18 @@ function playTone({
   gain = 0.2,
   delay = 0,
 }: Tone): void {
-  if (muted || !unlocked) return
-  const audio = ensureContext()
-  if (!sfxBus) return
+  if (muted) return
 
-  const t0 = now() + delay
+  const audio = ensureContext()
+  if (!sfxBus || !master) return
+
+  // User-gesture path: kick context awake without waiting
+  if (audio.state === 'suspended') {
+    void audio.resume()
+  }
+  unlocked = true
+
+  const t0 = audio.currentTime + delay
   const osc = audio.createOscillator()
   const g = audio.createGain()
   osc.type = type
@@ -65,7 +92,7 @@ function playTone({
   osc.connect(g)
   g.connect(sfxBus)
   osc.start(t0)
-  osc.stop(t0 + duration)
+  osc.stop(t0 + Math.max(duration, attack + decay) + 0.02)
 }
 
 export function isMuted(): boolean {
@@ -78,8 +105,9 @@ export function isUnlocked(): boolean {
 
 export function setMuted(value: boolean): void {
   muted = value
+  const audio = ensureContext()
   if (!master) return
-  const t = now()
+  const t = audio.currentTime
   master.gain.cancelScheduledValues(t)
   master.gain.setTargetAtTime(value ? 0 : 1, t, 0.03)
   if (value) {
@@ -89,32 +117,21 @@ export function setMuted(value: boolean): void {
   }
 }
 
-export async function unlock(): Promise<void> {
-  const audio = ensureContext()
-  if (audio.state === 'suspended') {
-    await audio.resume()
-  }
-  unlocked = true
-  if (!muted) {
-    startBgm()
-  }
-}
-
 export function playMove(): void {
-  playTone({ freq: 320, type: 'triangle', duration: 0.08, decay: 0.06, gain: 0.08 })
-  playTone({ freq: 180, type: 'sine', duration: 0.1, decay: 0.08, gain: 0.05, delay: 0.01 })
+  playTone({ freq: 380, type: 'triangle', duration: 0.1, decay: 0.08, gain: 0.22 })
+  playTone({ freq: 220, type: 'sine', duration: 0.12, decay: 0.1, gain: 0.12, delay: 0.015 })
 }
 
 export function playMerge(scoreGain: number): void {
   const tier = Math.min(8, Math.max(1, Math.log2(Math.max(scoreGain, 2))))
-  const base = 420 + tier * 55
-  playTone({ freq: base, type: 'sine', duration: 0.14, decay: 0.12, gain: 0.18 })
-  playTone({ freq: base * 1.5, type: 'triangle', duration: 0.12, decay: 0.1, gain: 0.1, delay: 0.02 })
+  const base = 440 + tier * 60
+  playTone({ freq: base, type: 'sine', duration: 0.16, decay: 0.14, gain: 0.32 })
+  playTone({ freq: base * 1.5, type: 'triangle', duration: 0.14, decay: 0.12, gain: 0.18, delay: 0.025 })
   playSpawn()
 }
 
 export function playSpawn(): void {
-  playTone({ freq: 660, type: 'sine', duration: 0.07, decay: 0.05, gain: 0.06 })
+  playTone({ freq: 720, type: 'sine', duration: 0.08, decay: 0.06, gain: 0.14 })
 }
 
 export function playWin(): void {
@@ -123,10 +140,10 @@ export function playWin(): void {
     playTone({
       freq,
       type: 'sine',
-      duration: 0.28,
+      duration: 0.3,
       attack: 0.01,
-      decay: 0.22,
-      gain: 0.16,
+      decay: 0.24,
+      gain: 0.28,
       delay: i * 0.1,
     })
   })
@@ -136,27 +153,24 @@ export function playLose(): void {
   ;[280, 220, 160].forEach((freq, i) => {
     playTone({
       freq,
-      type: 'sawtooth',
+      type: 'triangle',
       duration: 0.35,
       attack: 0.02,
       decay: 0.28,
-      gain: 0.1,
+      gain: 0.2,
       delay: i * 0.12,
     })
   })
 }
 
 export function playNewGame(): void {
-  playTone({ freq: 480, type: 'sine', duration: 0.1, decay: 0.08, gain: 0.12 })
-  playTone({ freq: 640, type: 'triangle', duration: 0.12, decay: 0.1, gain: 0.1, delay: 0.06 })
+  playTone({ freq: 480, type: 'sine', duration: 0.12, decay: 0.1, gain: 0.22 })
+  playTone({ freq: 640, type: 'triangle', duration: 0.14, decay: 0.12, gain: 0.16, delay: 0.06 })
 }
 
 export function playUiClick(): void {
-  playTone({ freq: 700, type: 'square', duration: 0.05, decay: 0.04, gain: 0.04 })
+  playTone({ freq: 700, type: 'square', duration: 0.06, decay: 0.05, gain: 0.1 })
 }
-
-let bgmTimer: number | null = null
-let bgmStep = 0
 
 function clearBgmGraph(): void {
   if (bgmTimer !== null) {
@@ -189,7 +203,10 @@ function clearBgmGraph(): void {
 }
 
 export function stopBgm(): void {
-  if (!bgmRunning || !bgmBus || !ctx) return
+  if (!bgmRunning || !bgmBus || !ctx) {
+    clearBgmGraph()
+    return
+  }
   const t = now()
   bgmBus.gain.cancelScheduledValues(t)
   bgmBus.gain.setTargetAtTime(0.0001, t, 0.08)
@@ -203,6 +220,9 @@ function playBgmNote(
   type: OscillatorType = 'sine',
 ): void {
   if (!ctx || !bgmBus || muted || freq <= 0) return
+  if (ctx.state === 'suspended') {
+    void ctx.resume()
+  }
   const t0 = now()
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
@@ -219,8 +239,11 @@ function playBgmNote(
 
 export function startBgm(): void {
   if (muted || !unlocked || bgmRunning) return
-  ensureContext()
+  const audio = ensureContext()
   if (!bgmBus) return
+  if (audio.state === 'suspended') {
+    void audio.resume()
+  }
 
   clearBgmGraph()
   bgmRunning = true
@@ -228,8 +251,6 @@ export function startBgm(): void {
   bgmBus.gain.setValueAtTime(0.0001, now())
   bgmBus.gain.exponentialRampToValueAtTime(0.07, now() + 0.8)
 
-  // Calm, soft G-major phrases with rests (0 = silence) — not a busy loop
-  // G4 A4 B4 D5 | E5 D5 B4 A4 | G4 B4 A4 D5 | rest rest E5 D5 | ...
   const melody = [
     392.0, 440.0, 493.88, 587.33, 659.25, 587.33, 493.88, 440.0, 392.0, 493.88, 440.0,
     587.33, 0, 0, 659.25, 587.33, 523.25, 493.88, 440.0, 392.0, 349.23, 392.0, 440.0, 493.88,

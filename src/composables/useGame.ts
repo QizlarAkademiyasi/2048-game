@@ -1,4 +1,12 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  playLose,
+  playMerge,
+  playMove,
+  playNewGame,
+  playWin,
+  unlock,
+} from '../audio/soundEngine'
 import { createNewGame, move } from '../game/engine'
 import { loadGame, saveGame } from '../game/storage'
 import type { Direction, GameSnapshot } from '../game/types'
@@ -18,8 +26,10 @@ export function useGame() {
   }
 
   function newGame(): void {
+    void unlock()
     state.value = createNewGame(state.value.best)
     persist()
+    playNewGame()
   }
 
   function continuePlaying(): void {
@@ -28,10 +38,26 @@ export function useGame() {
   }
 
   function tryMove(direction: Direction): void {
-    const next = move(state.value, direction)
+    void unlock()
+    const prev = state.value
+    const next = move(prev, direction)
     if (!next) return
+
+    const scoreGain = next.score - prev.score
+    if (scoreGain > 0) {
+      playMerge(scoreGain)
+    } else {
+      playMove()
+    }
+
+    const becameWin = next.won && !prev.won
+    const becameLose = next.over && !prev.over
+
     state.value = next
     persist()
+
+    if (becameWin) playWin()
+    if (becameLose) playLose()
   }
 
   function onKeydown(event: KeyboardEvent): void {

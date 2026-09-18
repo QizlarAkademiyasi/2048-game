@@ -2,10 +2,12 @@
 defineProps<{
   score: number
   best: number
+  muted: boolean
 }>()
 
 defineEmits<{
   newGame: []
+  toggleMute: []
 }>()
 </script>
 
@@ -28,7 +30,18 @@ defineEmits<{
 
     <div class="title-row">
       <h1 class="title">2048</h1>
-      <button type="button" class="new-game" @click="$emit('newGame')">New Game</button>
+      <div class="actions">
+        <button
+          type="button"
+          class="mute"
+          :aria-label="muted ? 'Unmute sound' : 'Mute sound'"
+          :title="muted ? 'Unmute' : 'Mute'"
+          @click="$emit('toggleMute')"
+        >
+          <span aria-hidden="true">{{ muted ? '🔇' : '🔊' }}</span>
+        </button>
+        <button type="button" class="new-game" @click="$emit('newGame')">New Game</button>
+      </div>
     </div>
   </header>
 </template>
@@ -101,6 +114,30 @@ defineEmits<{
   letter-spacing: -0.02em;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mute {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--brand-ink);
+  font-size: 20px;
+  line-height: 1;
+  transition: background var(--transition);
+}
+
+.mute:hover {
+  background: var(--brand-accent-soft);
+}
+
 .new-game {
   padding: 12px 18px;
   border-radius: var(--radius);
@@ -127,6 +164,11 @@ defineEmits<{
 
   .value {
     font-size: 18px;
+  }
+
+  .mute {
+    width: 40px;
+    height: 40px;
   }
 }
 </style>

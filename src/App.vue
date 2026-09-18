@@ -2,16 +2,24 @@
 import Board from './components/Board.vue'
 import GameHeader from './components/GameHeader.vue'
 import Overlay from './components/Overlay.vue'
+import { useAudio } from './composables/useAudio'
 import { useGame } from './composables/useGame'
 
 const { state, showWin, showLose, newGame, continuePlaying, onTouchStart, onTouchEnd } =
   useGame()
+const { muted, toggleMute } = useAudio()
 </script>
 
 <template>
   <div class="app">
     <main class="shell">
-      <GameHeader :score="state.score" :best="state.best" @new-game="newGame" />
+      <GameHeader
+        :score="state.score"
+        :best="state.best"
+        :muted="muted"
+        @new-game="newGame"
+        @toggle-mute="toggleMute"
+      />
 
       <div
         class="board-wrap"

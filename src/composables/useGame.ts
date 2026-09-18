@@ -1,11 +1,11 @@
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
+  ensureAudioReady,
   playLose,
   playMerge,
   playMove,
   playNewGame,
   playWin,
-  unlock,
 } from '../audio/soundEngine'
 import { createNewGame, move } from '../game/engine'
 import { loadGame, saveGame } from '../game/storage'
@@ -25,8 +25,8 @@ export function useGame() {
     saveGame(state.value)
   }
 
-  function newGame(): void {
-    void unlock()
+  async function newGame(): Promise<void> {
+    await ensureAudioReady()
     state.value = createNewGame(state.value.best)
     persist()
     playNewGame()
@@ -37,12 +37,12 @@ export function useGame() {
     persist()
   }
 
-  function tryMove(direction: Direction): void {
+  async function tryMove(direction: Direction): Promise<void> {
     const prev = state.value
     const next = move(prev, direction)
     if (!next) return
 
-    void unlock()
+    await ensureAudioReady()
 
     const scoreGain = next.score - prev.score
     if (scoreGain > 0) {
@@ -76,30 +76,45 @@ export function useGame() {
     const direction = map[event.key]
     if (!direction) return
     event.preventDefault()
-    tryMove(direction)
+    void tryMove(direction)
   }
 
   let touchStartX = 0
   let touchStartY = 0
+  let touchTracking = false
 
   function onTouchStart(event: TouchEvent): void {
-    if (event.touches.length !== 1) return
+    if (event.touches.length !== 1) {
+      touchTracking = false
+      return
+    }
+    touchTracking = true
     touchStartX = event.touches[0].clientX
     touchStartY = event.touches[0].clientY
+    void ensureAudioReady()
   }
 
-  function onTouchEnd(event: TouchEvent): void {
+  function onTouchMove(event: TouchEvent): void {
+    if (!touchTracking || event.touches.length !== 1) return
+    event.preventDefault()
+  }
+
+  async function onTouchEnd(event: TouchEvent): Promise<void> {
+    if (!touchTracking) return
+    touchTracking = false
     if (event.changedTouches.length !== 1) return
     const dx = event.changedTouches[0].clientX - touchStartX
     const dy = event.changedTouches[0].clientY - touchStartY
     if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_THRESHOLD) return
 
     if (Math.abs(dx) > Math.abs(dy)) {
-      tryMove(dx > 0 ? 'right' : 'left')
+      await tryMove(dx > 0 ? 'right' : 'left')
     } else {
-      tryMove(dy > 0 ? 'down' : 'up')
+      await tryMove(dy > 0 ? 'down' : 'up')
     }
   }
+
+  let touchRoot: HTMLElement | null = null
 
   onMounted(() => {
     const saved = loadGame()
@@ -107,13 +122,23 @@ export function useGame() {
       state.value = saved
     }
     window.addEventListener('keydown', onKeydown)
+
+    touchRoot = document.getElementById('app')
+    if (touchRoot) {
+      touchRoot.addEventListener('touchstart', onTouchStart, { passive: true })
+      touchRoot.addEventListener('touchmove', onTouchMove, { passive: false })
+      touchRoot.addEventListener('touchend', onTouchEnd, { passive: true })
+    }
   })
 
   onUnmounted(() => {
     window.removeEventListener('keydown', onKeydown)
+    if (touchRoot) {
+      touchRoot.removeEventListener('touchstart', onTouchStart)
+      touchRoot.removeEventListener('touchmove', onTouchMove)
+      touchRoot.removeEventListener('touchend', onTouchEnd)
+    }
   })
-
-  watch(state, persist, { deep: true })
 
   return {
     state,
@@ -122,7 +147,5 @@ export function useGame() {
     newGame,
     continuePlaying,
     tryMove,
-    onTouchStart,
-    onTouchEnd,
   }
 }

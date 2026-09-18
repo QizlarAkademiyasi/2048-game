@@ -23,6 +23,13 @@ const reducedMotion = ref(
     window.matchMedia('(prefers-reduced-motion: reduce)').matches,
 )
 
+const mobileLite = ref(
+  typeof window !== 'undefined' &&
+    window.matchMedia('(hover: none) and (pointer: coarse)').matches,
+)
+
+const animating = ref(true)
+
 function initShapes(viewW: number, viewH: number): DriftShape[] {
   const specs = [
     {
@@ -102,15 +109,32 @@ function tick() {
   raf = requestAnimationFrame(tick)
 }
 
-function onResize() {
+function stopAnimation() {
   cancelAnimationFrame(raf)
+  raf = 0
+}
+
+function startAnimation() {
+  if (reducedMotion.value || !animating.value) return
+  if (raf) return
+  raf = requestAnimationFrame(tick)
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    stopAnimation()
+  } else {
+    startAnimation()
+  }
+}
+
+function onResize() {
+  stopAnimation()
   shapes.value = initShapes(window.innerWidth, window.innerHeight)
   for (const s of shapes.value) {
     applyTransform(s)
   }
-  if (!reducedMotion.value) {
-    raf = requestAnimationFrame(tick)
-  }
+  startAnimation()
 }
 
 function setBlobRef(id: number, el: HTMLDivElement | null) {
@@ -137,18 +161,21 @@ function fillStyle(s: DriftShape) {
 }
 
 onMounted(() => {
-  shapes.value = initShapes(window.innerWidth, window.innerHeight)
-
-  if (!reducedMotion.value) {
-    raf = requestAnimationFrame(tick)
+  if (mobileLite.value) {
+    animating.value = false
   }
 
+  shapes.value = initShapes(window.innerWidth, window.innerHeight)
+  startAnimation()
+
   window.addEventListener('resize', onResize)
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
 onUnmounted(() => {
-  cancelAnimationFrame(raf)
+  stopAnimation()
   window.removeEventListener('resize', onResize)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
 
@@ -160,6 +187,7 @@ onUnmounted(() => {
         :key="s.id"
         :ref="(el) => setBlobRef(s.id, el as HTMLDivElement | null)"
         class="bg-shapes__shell"
+        :class="{ 'bg-shapes__shell--anim': animating && !reducedMotion }"
         :style="shellStyle(s)"
       >
         <div class="bg-shapes__fill" :style="fillStyle(s)" />
@@ -181,8 +209,11 @@ onUnmounted(() => {
   position: absolute;
   top: 0;
   left: 0;
-  will-change: transform;
   transform: translate3d(0, 0, 0);
+}
+
+.bg-shapes__shell--anim {
+  will-change: transform;
 }
 
 .bg-shapes__fill {
@@ -196,6 +227,12 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .bg-shapes__fill {
     filter: blur(40px);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .bg-shapes__fill {
+    filter: blur(28px);
   }
 }
 </style>

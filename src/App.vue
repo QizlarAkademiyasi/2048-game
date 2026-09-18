@@ -6,9 +6,8 @@ import Overlay from './components/Overlay.vue'
 import { useAudio } from './composables/useAudio'
 import { useGame } from './composables/useGame'
 
-const { state, showWin, showLose, newGame, continuePlaying, onTouchStart, onTouchEnd } =
-  useGame()
-const { muted, toggleMute } = useAudio()
+const { state, showWin, showLose, newGame, continuePlaying } = useGame()
+const { muted, toggleMute, showSoundHint } = useAudio()
 </script>
 
 <template>
@@ -19,15 +18,12 @@ const { muted, toggleMute } = useAudio()
         :score="state.score"
         :best="state.best"
         :muted="muted"
+        :show-sound-hint="showSoundHint"
         @new-game="newGame"
         @toggle-mute="toggleMute"
       />
 
-      <div
-        class="board-wrap"
-        @touchstart.passive="onTouchStart"
-        @touchend.passive="onTouchEnd"
-      >
+      <div class="board-wrap">
         <Board :tiles="state.tiles" />
         <Overlay
           v-if="showWin"
@@ -51,6 +47,7 @@ const { muted, toggleMute } = useAudio()
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   gap: 22px;
 }
 
@@ -58,11 +55,25 @@ const { muted, toggleMute } = useAudio()
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-height: 0;
+  width: 100%;
 }
 
 .board-wrap {
   position: relative;
   width: fit-content;
   margin: 0 auto;
+  touch-action: none;
+}
+
+@media (max-height: 700px) {
+  .app {
+    padding: 16px 12px 20px;
+    gap: 12px;
+  }
+
+  .shell {
+    gap: 12px;
+  }
 }
 </style>

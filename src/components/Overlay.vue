@@ -110,4 +110,12 @@ defineEmits<{
     opacity: 1;
   }
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgb(250 248 249 / 88%);
+  }
+}
 </style>

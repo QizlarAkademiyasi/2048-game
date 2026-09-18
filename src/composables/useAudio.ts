@@ -1,5 +1,6 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import {
+  isUnlocked,
   playUiClick,
   setMuted as setEngineMuted,
   unlock,
@@ -28,11 +29,15 @@ function saveMuted(muted: boolean): void {
 
 export function useAudio() {
   const muted = ref(loadMuted())
+  const showSoundHint = ref(!muted.value && !isUnlocked())
 
   setEngineMuted(muted.value)
 
   async function unlockOnGesture(): Promise<void> {
     await unlock()
+    if (isUnlocked()) {
+      showSoundHint.value = false
+    }
   }
 
   function toggleMute(): void {
@@ -40,33 +45,31 @@ export function useAudio() {
       playUiClick()
       muted.value = true
       setEngineMuted(true)
+      showSoundHint.value = false
     } else {
       muted.value = false
       setEngineMuted(false)
-      void unlock().then(() => playUiClick())
+      void unlock().then(() => {
+        playUiClick()
+        showSoundHint.value = false
+      })
     }
     saveMuted(muted.value)
   }
 
   function onFirstGesture(): void {
     void unlockOnGesture()
-    window.removeEventListener('pointerdown', onFirstGesture)
-    window.removeEventListener('keydown', onFirstGesture)
   }
 
   onMounted(() => {
-    window.addEventListener('pointerdown', onFirstGesture, { once: true })
+    window.addEventListener('pointerdown', onFirstGesture, { once: true, capture: true })
+    window.addEventListener('touchstart', onFirstGesture, { once: true, capture: true, passive: true })
     window.addEventListener('keydown', onFirstGesture, { once: true })
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener('pointerdown', onFirstGesture)
-    window.removeEventListener('keydown', onFirstGesture)
   })
 
   return {
     muted,
     toggleMute,
-    unlockOnGesture,
+    showSoundHint,
   }
 }

@@ -3,6 +3,7 @@ defineProps<{
   score: number
   best: number
   muted: boolean
+  showSoundHint?: boolean
 }>()
 
 defineEmits<{
@@ -29,7 +30,10 @@ defineEmits<{
     </div>
 
     <div class="title-row">
-      <h1 class="title">2048</h1>
+      <div class="title-block">
+        <h1 class="title">2048</h1>
+        <p v-if="showSoundHint" class="sound-hint">Ovoz uchun ekranni bosing</p>
+      </div>
       <div class="actions">
         <button
           type="button"
@@ -108,6 +112,17 @@ defineEmits<{
   gap: 12px;
 }
 
+.title-block {
+  min-width: 0;
+}
+
+.sound-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .title {
   margin: 0;
   font-size: clamp(40px, 12vw, 56px);
@@ -183,6 +198,29 @@ defineEmits<{
   .mute {
     width: 40px;
     height: 40px;
+  }
+}
+
+@media (max-height: 680px) {
+  .logo {
+    height: 36px;
+  }
+
+  .title {
+    font-size: clamp(32px, 10vw, 44px);
+  }
+
+  .score-box {
+    padding: 6px 10px;
+  }
+
+  .value {
+    font-size: 17px;
+  }
+
+  .new-game {
+    padding: 10px 14px;
+    font-size: 14px;
   }
 }
 </style>

@@ -45,20 +45,26 @@ function now(): number {
   return ensureContext().currentTime
 }
 
-/** Resume AudioContext; safe to call from any user gesture. */
-export async function unlock(): Promise<void> {
+/** Resume AudioContext; returns true when context is running. */
+export async function ensureAudioReady(): Promise<boolean> {
   const audio = ensureContext()
   unlocked = true
   if (audio.state === 'suspended') {
     try {
       await audio.resume()
     } catch {
-      // ignore — browser may still block until next gesture
+      return false
     }
   }
-  if (!muted && !bgmRunning) {
+  if (audio.state === 'running' && !muted && !bgmRunning) {
     startBgm()
   }
+  return audio.state === 'running'
+}
+
+/** Resume AudioContext; safe to call from any user gesture. */
+export async function unlock(): Promise<void> {
+  await ensureAudioReady()
 }
 
 function playTone({
@@ -74,12 +80,7 @@ function playTone({
 
   const audio = ensureContext()
   if (!sfxBus || !master) return
-
-  // User-gesture path: kick context awake without waiting
-  if (audio.state === 'suspended') {
-    void audio.resume()
-  }
-  unlocked = true
+  if (audio.state !== 'running') return
 
   const t0 = audio.currentTime + delay
   const osc = audio.createOscillator()
@@ -220,9 +221,7 @@ function playBgmNote(
   type: OscillatorType = 'sine',
 ): void {
   if (!ctx || !bgmBus || muted || freq <= 0) return
-  if (ctx.state === 'suspended') {
-    void ctx.resume()
-  }
+  if (ctx.state !== 'running') return
   const t0 = now()
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
@@ -241,9 +240,7 @@ export function startBgm(): void {
   if (muted || !unlocked || bgmRunning) return
   const audio = ensureContext()
   if (!bgmBus) return
-  if (audio.state === 'suspended') {
-    void audio.resume()
-  }
+  if (audio.state !== 'running') return
 
   clearBgmGraph()
   bgmRunning = true

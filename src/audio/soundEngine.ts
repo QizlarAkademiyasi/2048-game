@@ -200,21 +200,21 @@ function playBgmNote(
   freq: number,
   duration: number,
   gain: number,
-  type: OscillatorType = 'triangle',
+  type: OscillatorType = 'sine',
 ): void {
-  if (!ctx || !bgmBus || muted) return
+  if (!ctx || !bgmBus || muted || freq <= 0) return
   const t0 = now()
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
   osc.type = type
   osc.frequency.setValueAtTime(freq, t0)
   g.gain.setValueAtTime(0.0001, t0)
-  g.gain.exponentialRampToValueAtTime(Math.max(gain, 0.001), t0 + 0.01)
+  g.gain.exponentialRampToValueAtTime(Math.max(gain, 0.001), t0 + 0.04)
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration)
   osc.connect(g)
   g.connect(bgmBus)
   osc.start(t0)
-  osc.stop(t0 + duration + 0.02)
+  osc.stop(t0 + duration + 0.05)
 }
 
 export function startBgm(): void {
@@ -226,25 +226,22 @@ export function startBgm(): void {
   bgmRunning = true
   bgmBus.gain.cancelScheduledValues(now())
   bgmBus.gain.setValueAtTime(0.0001, now())
-  bgmBus.gain.exponentialRampToValueAtTime(0.14, now() + 0.4)
+  bgmBus.gain.exponentialRampToValueAtTime(0.07, now() + 0.8)
 
-  // Cheerful C-major arpeggio only (no continuous pad drone)
-  // C5 D5 E5 G5 A5 G5 E5 D5 | E5 G5 A5 C6 A5 G5 E5 C5
+  // Calm, soft G-major phrases with rests (0 = silence) — not a busy loop
+  // G4 A4 B4 D5 | E5 D5 B4 A4 | G4 B4 A4 D5 | rest rest E5 D5 | ...
   const melody = [
-    523.25, 587.33, 659.25, 783.99, 880.0, 783.99, 659.25, 587.33, 659.25, 783.99, 880.0,
-    1046.5, 880.0, 783.99, 659.25, 523.25,
-  ]
-  const bass = [
-    130.81, 0, 0, 0, 196.0, 0, 0, 0, 146.83, 0, 0, 0, 196.0, 0, 130.81, 0,
+    392.0, 440.0, 493.88, 587.33, 659.25, 587.33, 493.88, 440.0, 392.0, 493.88, 440.0,
+    587.33, 0, 0, 659.25, 587.33, 523.25, 493.88, 440.0, 392.0, 349.23, 392.0, 440.0, 493.88,
+    0, 440.0, 392.0, 349.23, 392.0, 0, 0, 0,
   ]
 
-  const stepMs = 220
+  const stepMs = 480
   bgmTimer = window.setInterval(() => {
     if (muted || !unlocked || !bgmRunning) return
-    const i = bgmStep % melody.length
-    playBgmNote(melody[i], 0.18, 0.11, 'triangle')
-    if (bass[i] > 0) {
-      playBgmNote(bass[i], 0.22, 0.05, 'sine')
+    const freq = melody[bgmStep % melody.length]
+    if (freq > 0) {
+      playBgmNote(freq, 0.42, 0.055, 'sine')
     }
     bgmStep += 1
   }, stepMs)

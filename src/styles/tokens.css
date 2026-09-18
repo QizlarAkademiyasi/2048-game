@@ -1,38 +1,46 @@
 :root {
-  /* Qizlar Akademiyasi AppColors (light) */
+  /* Qizlar Akademiyasi — logo #E8357D */
   --brand-primary: #e8357d;
   --brand-primary-dark: #c42d68;
+  --brand-primary-light: #f06a9e;
   --brand-accent-soft: #ffe4ee;
-  --brand-ink: #0f172a;
+  --brand-accent-muted: #fce7f0;
+  --brand-ink: #1a1625;
 
-  --bg: #f7f7f5;
-  --bg-pattern: #f1f5f9;
-  --surface: #fff5f8;
-  --board: #e8d4dc;
-  --cell: #f3e6eb;
-  --text-dark: #64748b;
+  --bg: #faf6f8;
+  --bg-soft: #f2f2f2;
+  --bg-blush: #eebacd;
+  --bg-pattern: #f5eef2;
+  --surface: #ffffff;
+  --surface-elevated: #fffafb;
+  --board: #d4b8c4;
+  --cell: #e8dce2;
+  --text-dark: #5c5260;
   --text-light: #ffffff;
-  --text-muted: #94a3b8;
-  --shadow: rgb(15 23 42 / 12%);
+  --text-muted: #9a8f98;
+  --shadow: rgb(26 22 37 / 10%);
+  --shadow-brand: rgb(232 53 125 / 22%);
 
-  --tile-2: #fff5f8;
-  --tile-4: #ffe4ee;
-  --tile-8: #f7a0c0;
-  --tile-16: #f278a8;
+  --tile-2: #ffffff;
+  --tile-4: #eebacd;
+  --tile-8: #f5b3cc;
+  --tile-16: #ef7aab;
   --tile-32: #e8357d;
-  --tile-64: #d12a6e;
-  --tile-128: #c2185b;
-  --tile-256: #ad1457;
-  --tile-512: #9c1260;
-  --tile-1024: #880e4f;
+  --tile-64: #d42f72;
+  --tile-128: #c02866;
+  --tile-256: #a82258;
+  --tile-512: #901c4c;
+  --tile-1024: #781640;
   --tile-2048: #e8357d;
-  --tile-super: #0f172a;
+  --tile-super: #1a1625;
 
   --font: "Rubik", system-ui, sans-serif;
-  --radius: 6px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-sm: 10px;
   --gap: 12px;
   --board-size: min(92vw, 460px);
-  --transition: 120ms ease-in-out;
+  --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 *,
@@ -41,25 +49,40 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  min-height: 100%;
+  background-color: var(--bg-soft);
+}
+
 body {
   margin: 0;
   min-height: 100%;
   font-family: var(--font);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(232 53 125 / 12%), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgb(255 228 238 / 55%), transparent),
-    var(--bg);
   color: var(--text-dark);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-body {
   overscroll-behavior: none;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 85% 55% at 50% -8%, rgb(232 53 125 / 11%), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 100% 85%, rgb(238 186 205 / 45%), transparent 52%),
+    radial-gradient(ellipse 45% 40% at 0% 55%, rgb(242 242 242 / 90%), transparent 48%),
+    linear-gradient(
+      160deg,
+      var(--bg-soft) 0%,
+      var(--bg) 32%,
+      #f3e6ed 68%,
+      var(--bg-blush) 100%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #app {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -75,4 +98,8 @@ button {
 button:focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
+}
+
+button:active {
+  transform: scale(0.98);
 }

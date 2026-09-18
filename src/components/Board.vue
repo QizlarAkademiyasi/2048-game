@@ -50,9 +50,12 @@ const positioned = computed(() =>
   width: var(--board-size);
   aspect-ratio: 1;
   padding: var(--gap);
-  border-radius: 10px;
-  background: var(--board);
-  box-shadow: 0 10px 30px var(--shadow);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, #c9a8b6 0%, var(--board) 45%, #c4a0ae 100%);
+  box-shadow:
+    0 20px 50px rgb(26 22 37 / 12%),
+    0 0 0 1px rgb(255 255 255 / 35%) inset,
+    0 4px 0 rgb(0 0 0 / 6%);
   touch-action: none;
 }
 
@@ -71,8 +74,9 @@ const positioned = computed(() =>
 }
 
 .cell {
-  border-radius: var(--radius);
-  background: var(--cell);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 22%);
+  box-shadow: inset 0 2px 6px rgb(26 22 37 / 8%);
 }
 
 .tile-slot {

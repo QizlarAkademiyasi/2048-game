@@ -219,38 +219,16 @@ function playBgmNote(
 
 export function startBgm(): void {
   if (muted || !unlocked || bgmRunning) return
-  const audio = ensureContext()
+  ensureContext()
   if (!bgmBus) return
 
   clearBgmGraph()
   bgmRunning = true
   bgmBus.gain.cancelScheduledValues(now())
   bgmBus.gain.setValueAtTime(0.0001, now())
-  bgmBus.gain.exponentialRampToValueAtTime(0.12, now() + 0.6)
+  bgmBus.gain.exponentialRampToValueAtTime(0.14, now() + 0.4)
 
-  // Soft happy pad under the melody (C major: C4 E4 G4)
-  const padFreqs = [261.63, 329.63, 392.0]
-  const filter = audio.createBiquadFilter()
-  filter.type = 'lowpass'
-  filter.frequency.value = 1400
-  filter.Q.value = 0.5
-  filter.connect(bgmBus)
-  bgmNodes.push(filter)
-
-  for (const freq of padFreqs) {
-    const osc = audio.createOscillator()
-    const g = audio.createGain()
-    osc.type = 'sine'
-    osc.frequency.value = freq
-    g.gain.value = 0.07
-    osc.connect(g)
-    g.connect(filter)
-    osc.start()
-    bgmOscillators.push(osc)
-    bgmNodes.push(g)
-  }
-
-  // Cheerful C-major arpeggio loop (16 steps)
+  // Cheerful C-major arpeggio only (no continuous pad drone)
   // C5 D5 E5 G5 A5 G5 E5 D5 | E5 G5 A5 C6 A5 G5 E5 C5
   const melody = [
     523.25, 587.33, 659.25, 783.99, 880.0, 783.99, 659.25, 587.33, 659.25, 783.99, 880.0,
@@ -264,9 +242,9 @@ export function startBgm(): void {
   bgmTimer = window.setInterval(() => {
     if (muted || !unlocked || !bgmRunning) return
     const i = bgmStep % melody.length
-    playBgmNote(melody[i], 0.18, 0.09, 'triangle')
+    playBgmNote(melody[i], 0.18, 0.11, 'triangle')
     if (bass[i] > 0) {
-      playBgmNote(bass[i], 0.28, 0.06, 'sine')
+      playBgmNote(bass[i], 0.22, 0.05, 'sine')
     }
     bgmStep += 1
   }, stepMs)

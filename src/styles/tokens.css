@@ -7,7 +7,9 @@
   --brand-accent-muted: #fce7f0;
   --brand-ink: #1a1625;
 
-  --bg: #faf8f9;
+  --bg: #faf6f8;
+  --bg-soft: #f2f2f2;
+  --bg-blush: #eebacd;
   --bg-pattern: #f5eef2;
   --surface: #ffffff;
   --surface-elevated: #fffafb;
@@ -47,26 +49,40 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  min-height: 100%;
+  background-color: var(--bg-soft);
+}
+
 body {
   margin: 0;
   min-height: 100%;
   font-family: var(--font);
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgb(232 53 125 / 14%), transparent 55%),
-    radial-gradient(ellipse 70% 45% at 100% 90%, rgb(255 228 238 / 65%), transparent 50%),
-    radial-gradient(ellipse 50% 35% at 0% 70%, rgb(232 53 125 / 6%), transparent 45%),
-    var(--bg);
   color: var(--text-dark);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-body {
   overscroll-behavior: none;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 85% 55% at 50% -8%, rgb(232 53 125 / 11%), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 100% 85%, rgb(238 186 205 / 45%), transparent 52%),
+    radial-gradient(ellipse 45% 40% at 0% 55%, rgb(242 242 242 / 90%), transparent 48%),
+    linear-gradient(
+      160deg,
+      var(--bg-soft) 0%,
+      var(--bg) 32%,
+      #f3e6ed 68%,
+      var(--bg-blush) 100%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #app {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;

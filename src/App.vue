@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BackgroundShapes from './components/BackgroundShapes.vue'
 import Board from './components/Board.vue'
 import GameHeader from './components/GameHeader.vue'
 import Overlay from './components/Overlay.vue'
@@ -11,6 +12,7 @@ const { muted, toggleMute } = useAudio()
 </script>
 
 <template>
+  <BackgroundShapes />
   <div class="app">
     <main class="shell">
       <GameHeader
@@ -41,6 +43,8 @@ const { muted, toggleMute } = useAudio()
 
 <style scoped>
 .app {
+  position: relative;
+  z-index: 1;
   width: min(100%, 520px);
   margin: 0 auto;
   padding: 28px 16px 36px;
